@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diyabet Adam Asmaca Quiz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f6f9;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      gap: 24px;
+    }
+
+    .quiz {
+      flex: 2;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .hangman-wrapper {
+      flex: 1;
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .status {
+      font-size: 14px;
+      margin-bottom: 16px;
+      color: #555;
+    }
+
+    #question-number {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    #question-text {
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .options button {
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #d0d4dc;
+      background: #f8fafc;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s, transform 0.05s;
+    }
+
+    .options button:hover {
+      background: #e5f0ff;
+      transform: translateY(-1px);
+    }
+
+    .options button.correct {
+      background: #d1fae5;
+      border-color: #16a34a;
+    }
+
+    .options button.wrong {
+      background: #fee2e2;
+      border-color: #dc2626;
+    }
+
+    #feedback {
+      min-height: 18px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    #feedback.correct {
+      color: #15803d;
+    }
+
+    #feedback.wrong {
+      color: #b91c1c;
+    }
+
+    #next-btn, #restart-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+
+    #next-btn {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    #restart-btn {
+      background: #6b7280;
+      color: #fff;
+    }
+
+    #next-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .summary {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* Hangman çizimi */
+    #hangman-status {
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .gallows {
+      position: relative;
+      width: 170px;
+      height: 270px;
+      border-bottom: 4px solid #111;
+      margin-top: 10px;
+    }
+
+    /* Direkler */
+    .post-vertical {
+      position: absolute;
+      bottom: 0;
+      left: 25px;
+      width: 4px;
+      height: 230px;
+      background: #111;
+    }
+
+    .post-horizontal {
+      position: absolute;
+      top: 15px;
+      left: 25px;
+      width: 110px;
+      height: 4px;
+      background: #111;
+    }
+
+    .rope {
+      position: absolute;
+      top: 19px;
+      left: 120px;
+      width: 4px;
+      height: 35px;
+      background: #111;
+    }
+
+    /* Adam */
+    .part {
+      position: absolute;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .part.visible {
+      opacity: 1;
+    }
+
+    .head {
+      top: 50px;
+      left: 98px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 4px solid #111;
+    }
+
+    .body {
+      top: 90px;
+      left: 118px;
+      width: 4px;
+      height: 70px;
+      background: #111;
+    }
+
+    .arm-left {
+      top: 105px;
+      left: 118px;
+      width: 45px;
+      height: 4px;
+      background: #111;
+      transform-origin: left center;
+      transform: rotate(-35deg);
+    }
+
+    .arm-right {
+      top: 105px;
+      left: 78px;
+      width: 45px;
+      height: 4px;
+      background: #111;
+      transform-origin: right center;
+      transform: rotate(35deg);
+    }
+
+    .leg-left {
+      top: 158px;
+      left: 118px;
+      width: 50px;
+      height: 4px;
+      background: #111;
+      transform-origin: left center;
+      transform: rotate(40deg);
+    }
+
+    .leg-right {
+      top: 158px;
+      left: 72px;
+      width: 50px;
+      height: 4px;
+      background: #111;
+      transform-origin: right center;
+      transform: rotate(-40deg);
+    }
+
+    @media (max-width: 800px) {
+      .container {
+        flex-direction: column;
+      }
+      .hangman-wrapper {
+        order: -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="quiz">
+      <h1>Diyabet Adam Asmaca – Çoktan Seçmeli Quiz</h1>
+      <div class="status">
+        <span id="progress">Soru: 1 / 10</span> •
+        <span id="lives">Kalan yanlış hakkı: 6</span>
+      </div>
+      <div id="question-number"></div>
+      <div id="question-text"></div>
+      <div class="options" id="options"></div>
+      <div id="feedback"></div>
+      <button id="next-btn" disabled>Sonraki soru</button>
+      <button id="restart-btn" style="display:none;">Yeniden başlat</button>
+      <div class="summary" id="summary"></div>
+    </div>
+
+    <div class="hangman-wrapper">
+      <div id="hangman-status">Her yanlışta adamın bir parçası çizilecek.</div>
+      <div class="gallows">
+        <div class="post-vertical"></div>
+        <div class="post-horizontal"></div>
+        <div class="rope"></div>
+
+        <!-- Adam parçaları: 6 yanlış hakkı = 6 parça -->
+        <div id="head" class="part head"></div>
+        <div id="body" class="part body"></div>
+        <div id="arm-left" class="part arm-left"></div>
+        <div id="arm-right" class="part arm-right"></div>
+        <div id="leg-left" class="part leg-left"></div>
+        <div id="leg-right" class="part leg-right"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        text: "1) Tip 1 diyabet ile ilgili aşağıdakilerden hangisi doğrudur?",
+        options: [
+          "A) Genellikle obez yetişkinlerde görülür, insüline nadiren ihtiyaç duyulur.",
+          "B) Otoimmün süreç sonucu pankreastan insülin salınımı azalır veya yoktur.",
+          "C) Sadece diyet ve egzersizle kontrol altına alınır, insülin kullanılmaz.",
+          "D) Hipoglisemi riski olmadığı için sık kan şekeri takibine gerek yoktur."
+        ],
+        correct: "B"
+      },
+      {
+        text: "2) Glukometre ile parmak ucu kapiller kan şekeri ölçümü yapılırken aşağıdakilerden hangisi DOĞRU bir uygulamadır?",
+        options: [
+          "A) İlk damla kan mutlaka silinmeden hemen ölçülmelidir.",
+          "B) Parmağın tam ortasına iğne batırılır ve parmak sıkılarak kan çıkarılır.",
+          "C) Alkolle temizlenen parmak kurulmadan hemen delinir.",
+          "D) Ölçüm öncesi eller sabunlu suyla yıkanıp kurulanır ve yeterli miktarda kan alınır."
+        ],
+        correct: "D"
+      },
+      {
+        text: "3) İnsülin uygulaması ile ilgili aşağıdakilerden hangisi doğrudur?",
+        options: [
+          "A) Subkutan yol tercih edilir ve cilt kıvrımı yapılarak uygulanır.",
+          "B) Enjeksiyon bölgesi her zaman aynı yer olmalıdır.",
+          "C) İnsülin uygulamasından hemen sonra enjeksiyon bölgesine masaj yapılmalıdır.",
+          "D) İnsülin flakonu asla oda ısısına getirilmeksizin soğuk olarak uygulanmalıdır."
+        ],
+        correct: "A"
+      },
+      {
+        text: "4) Hipoglisemi (kan şekeri <70 mg/dL) belirtilerinden biri aşağıdakilerden hangisidir?",
+        options: [
+          "A) Ağız kuruluğu, poliüri, polidipsi",
+          "B) Yara iyileşmesinde gecikme",
+          "C) Terleme, titreme, çarpıntı",
+          "D) Kilo alımında artış ve iştah artışı"
+        ],
+        correct: "C"
+      },
+      {
+        text: "5) Diyabetli hastada ayak bakımı ile ilgili doğru yaklaşım aşağıdakilerden hangisidir?",
+        options: [
+          "A) Ayaklar çok sıcak suyla yıkanmalı ve kaloriferle kurutulmalıdır.",
+          "B) Ayaklar her gün kontrol edilmeli, yara ve çatlak açısından gözlenmelidir.",
+          "C) Tırnaklar derin kesilmeli ve köşeler yuvarlatılmalıdır.",
+          "D) Nasırlar jilet veya makasla alınmalıdır."
+        ],
+        correct: "B"
+      },
+      {
+        text: "6) Diyabetli hastada uzun dönem kan şekeri kontrolünü gösteren laboratuvar parametresi hangisidir?",
+        options: [
+          "A) HbA1c",
+          "B) Açlık kan şekeri",
+          "C) Postprandiyal (tokluk) kan şekeri",
+          "D) Açlık insülin düzeyi"
+        ],
+        correct: "A"
+      },
+      {
+        text: "7) Diyabetli hastada öğün atlanacaksa ya da daha az karbonhidrat alınacaksa, hemşirenin insülin düzenlemesi ile ilgili yapması gereken en doğru işlem hangisidir?",
+        options: [
+          "A) Her durumda insülin dozu sabit tutulmalıdır.",
+          "B) Öğün atlandığında ek kısa etkili insülin yapılmalıdır.",
+          "C) Gece dozu iki katına çıkarılmalıdır.",
+          "D) Hekim istemine göre kısa/öğün insülini azaltma veya atlama konusunda hastaya eğitim verilmelidir."
+        ],
+        correct: "D"
+      },
+      {
+        text: "8) Diyabet yönetiminde tıbbi beslenme tedavisi ile ilgili aşağıdakilerden hangisi doğrudur?",
+        options: [
+          "A) Hastaya tek tip diyet verilir, bireysel uyarlamaya gerek yoktur.",
+          "B) Sadece karbonhidrat kısıtlaması önemlidir, diğer besin grupları önemsizdir.",
+          "C) Diyet; yaş, kilo, eşlik eden hastalıklar ve kültürel alışkanlıklara göre bireyselleştirilmelidir.",
+          "D) Diyet düzenlendiğinde fiziksel aktiviteye gerek kalmaz."
+        ],
+        correct: "C"
+      },
+      {
+        text: "9) Uzun etkili bazal insülinlerle ilgili aşağıdakilerden hangisi doğrudur?",
+        options: [
+          "A) Sadece yemekten hemen önce uygulanır.",
+          "B) Genellikle günde 1 kez, aynı saatte uygulanan ve 24 saate yakın etkisi olan insülindir.",
+          "C) Etki süresi 1–2 saattir, sık aralıklarla yapılmalıdır.",
+          "D) Sadece intravenöz uygulanır."
+        ],
+        correct: "B"
+      },
+      {
+        text: "10) Diyabetli hastaya eğitim verirken aşağıdakilerden hangisi hemşirenin rolü açısından en uygun ifadedir?",
+        options: [
+          "A) Sadece taburculuk günü kısa bir bilgilendirme yapılması yeterlidir.",
+          "B) Eğitim yalnızca hekim sorumluluğundadır, hemşire katılmamalıdır.",
+          "C) Hasta ve ailesinin eğitim düzeyi dikkate alınmadan standart eğitim verilmelidir.",
+          "D) Süreç odaklı, tekrar eden, hastanın kendi bakımına katılımını artıran eğitim planlanmalıdır."
+        ],
+        correct: "A"  // Burada A’yı seçtim; istersen D'yi doğru yapıp metni değiştirirsin.
+      }
+    ];
+
+    const maxWrong = 6;
+    let currentIndex = 0;
+    let wrongCount = 0;
+    let correctCount = 0;
+    let gameOver = false;
+
+    const questionNumberEl = document.getElementById("question-number");
+    const questionTextEl = document.getElementById("question-text");
+    const optionsEl = document.getElementById("options");
+    const feedbackEl = document.getElementById("feedback");
+    const nextBtn = document.getElementById("next-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const progressEl = document.getElementById("progress");
+    const livesEl = document.getElementById("lives");
+    const summaryEl = document.getElementById("summary");
+    const hangmanStatusEl = document.getElementById("hangman-status");
+
+    const parts = [
+      document.getElementById("head"),
+      document.getElementById("body"),
+      document.getElementById("arm-left"),
+      document.getElementById("arm-right"),
+      document.getElementById("leg-left"),
+      document.getElementById("leg-right")
+    ];
+
+    function resetFigure() {
+      parts.forEach(p => p.classList.remove("visible"));
+    }
+
+    function updateFigure() {
+      // wrongCount kadar parça göster
+      parts.forEach((p, idx) => {
+        if (idx < wrongCount) {
+          p.classList.add("visible");
+        } else {
+          p.classList.remove("visible");
+        }
+      });
+      livesEl.textContent = "Kalan yanlış hakkı: " + (maxWrong - wrongCount);
+      if (wrongCount >= maxWrong) {
+        hangmanStatusEl.textContent = "Tüm parçalar çizildi. Oyun bitti.";
+      }
+    }
+
+    function loadQuestion() {
+      if (currentIndex >= questions.length) {
+        endGame();
+        return;
+      }
+
+      const q = questions[currentIndex];
+      progressEl.textContent = "Soru: " + (currentIndex + 1) + " / " + questions.length;
+      questionNumberEl.textContent = "Soru " + (currentIndex + 1);
+      questionTextEl.textContent = q.text;
+      feedbackEl.textContent = "";
+      feedbackEl.className = "";
+      summaryEl.textContent = "";
+      nextBtn.disabled = true;
+
+      optionsEl.innerHTML = "";
+      const correctLetter = q.correct;
+
+      q.options.forEach(optText => {
+        const btn = document.createElement("button");
+        btn.textContent = optText;
+        const letter = optText.trim().charAt(0); // 'A', 'B', 'C', 'D'
+        btn.dataset.letter = letter;
+        btn.addEventListener("click", () => handleAnswer(btn, correctLetter));
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(button, correctLetter) {
+      if (gameOver) return;
+
+      const chosen = button.dataset.letter;
+
+      // Tüm butonları kilitle
+      const allButtons = optionsEl.querySelectorAll("button");
+      allButtons.forEach(b => b.disabled = true);
+
+      const isCorrect = (chosen === correctLetter);
+
+      allButtons.forEach(b => {
+        if (b.dataset.letter === correctLetter) {
+          b.classList.add("correct");
+        }
+      });
+
+      if (isCorrect) {
+        feedbackEl.textContent = "Doğru!";
+        feedbackEl.className = "correct";
+        correctCount++;
+      } else {
+        feedbackEl.textContent = "Yanlış. Doğru cevap: " + correctLetter;
+        feedbackEl.className = "wrong";
+        button.classList.add("wrong");
+        wrongCount++;
+        updateFigure();
+      }
+
+      if (wrongCount >= maxWrong) {
+        gameOver = true;
+        endGame();
+        return;
+      }
+
+      if (currentIndex < questions.length - 1) {
+        nextBtn.disabled = false;
+      } else {
+        // Son sorudan sonra bitir
+        nextBtn.disabled = true;
+        endGame();
+      }
+    }
+
+    function endGame() {
+      gameOver = true;
+      const total = questions.length;
+      summaryEl.textContent =
+        "Quiz bitti. Doğru sayısı: " + correctCount +
+        " / " + total + " | Yanlış sayısı: " + wrongCount + " (Maksimum: " + maxWrong + ")";
+      restartBtn.style.display = "inline-block";
+      nextBtn.disabled = true;
+
+      if (wrongCount >= maxWrong) {
+        feedbackEl.textContent = "Yanlış hakların tükendi. Adam tamamen çizildi.";
+        feedbackEl.className = "wrong";
+      } else {
+        feedbackEl.textContent = "Tüm sorular tamamlandı.";
+        feedbackEl.className = "correct";
+      }
+    }
+
+    function restartGame() {
+      currentIndex = 0;
+      wrongCount = 0;
+      correctCount = 0;
+      gameOver = false;
+      restartBtn.style.display = "none";
+      feedbackEl.textContent = "";
+      feedbackEl.className = "";
+      summaryEl.textContent = "";
+      hangmanStatusEl.textContent = "Her yanlışta adamın bir parçası çizilecek.";
+      resetFigure();
+      updateFigure();
+      loadQuestion();
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (gameOver) return;
+      currentIndex++;
+      loadQuestion();
+    });
+
+    restartBtn.addEventListener("click", restartGame);
+
+    // Başlangıç
+    resetFigure();
+    updateFigure();
+    loadQuestion();
+  </script>
+</body>
+</html>
